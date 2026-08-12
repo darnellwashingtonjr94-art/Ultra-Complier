@@ -5,6 +5,7 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
   build-and-test:
@@ -28,11 +29,9 @@ jobs:
 
       - name: Setup Android SDK & NDK
         run: |
-          # Install the specific build-tools version required by the packager
           echo "y" | ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "build-tools;34.0.0" "platform-tools" "platforms;android-34"
-          
-          # Export the environment variable to GitHub ENV so Python can read it
           echo "ANDROID_HOME=${ANDROID_HOME}" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=${ANDROID_HOME}" >> $GITHUB_ENV
 
       - name: Install LLVM & Clang
         run: |
@@ -58,7 +57,6 @@ jobs:
 
       - name: Run Integration Tests (Generate APKs)
         run: |
-          # The Python tests will now dynamically pull $ANDROID_HOME and find aapt2
           pytest tests/ -v
 
       - name: Upload Compiled APK Artifacts
