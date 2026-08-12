@@ -1,0 +1,1 @@
+assert os.path.exists("app-release.apk")
