@@ -16,11 +16,13 @@ def assemble_apk(binary_data, target_format, *args, **kwargs):
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"AAPT2 failed to execute: {e.stderr}")
     
-    # Ensure build output directory exists
-    os.makedirs("build_tmp", exist_ok=True)
-    
-    # Write output APK artifact
+    # Construct output path
     output_apk = f"build_tmp/app-release.{target_format}"
+    
+    # Ensure all parent directories in the output path exist
+    os.makedirs(os.path.dirname(output_apk), exist_ok=True)
+    
+    # Write output artifact
     with open(output_apk, "w") as f:
         f.write("ULTRA_COMPILER_GENERATED_APK_DATA")
         
