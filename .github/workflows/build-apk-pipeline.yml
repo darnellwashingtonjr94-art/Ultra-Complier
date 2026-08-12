@@ -12,69 +12,58 @@ jobs:
     name: Build All-to-APK Pipeline
 
     steps:
-      # 1. Checkout the code repository
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      # 2. Set up Python environment
       - name: Setup Python Environment
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      # 3. Set up Java (Required for the Android SDK tools like sdkmanager and d8/apksigner)
       - name: Setup Java (For Android SDK/D8)
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # 4. Set up Android SDK & NDK (THIS CONTAINS THE FIX FOR AAPT2)
       - name: Setup Android SDK & NDK
         run: |
-          # Use the pre-installed sdkmanager on the GitHub runner to install exactly what the Ultra-Compiler needs
-          echo "y" | ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "build-tools;34.0.0" "platform-tools" "platforms;android-34" "ndk;25.2.9519653"
+          # Install the specific build-tools version required by the packager
+          echo "y" | ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "build-tools;34.0.0" "platform-tools" "platforms;android-34"
           
-          # Ensure environment variables are exported for the subsequent Python scripts
-          echo "ANDROID_SDK_ROOT=${ANDROID_HOME}" >> $GITHUB_ENV
-          echo "ANDROID_SDK=${ANDROID_HOME}" >> $GITHUB_ENV
+          # Export the environment variable to GitHub ENV so Python can read it
+          echo "ANDROID_HOME=${ANDROID_HOME}" >> $GITHUB_ENV
 
-      # 5. Install LLVM & Clang (For C/C++ to LLVM IR compilation)
       - name: Install LLVM & Clang
         run: |
           sudo apt-get update
           sudo apt-get install -y llvm clang llvm-dev
 
-      # 6. Install Rust (For Rust Frontend support)
       - name: Install Rust (For Rust Frontend)
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           override: true
 
-      # 7. Install Go (For Go Mobile Runtime support)
       - name: Install Go (For Go Mobile Runtime)
         uses: actions/setup-go@v4
         with:
           go-version: '1.20'
 
-      # 8. Install Python Dependencies
       - name: Install Python Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install pytest
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      # 9. Run the Ultra-Compiler Integration Tests
       - name: Run Integration Tests (Generate APKs)
         run: |
-          # The Python tests will now successfully find aapt2 in /opt/android-sdk/build-tools/34.0.0/
+          # The Python tests will now dynamically pull $ANDROID_HOME and find aapt2
           pytest tests/ -v
 
-      # 10. Upload the resulting APKs as workflow artifacts
       - name: Upload Compiled APK Artifacts
         uses: actions/upload-artifact@v4
-        if: always() # Run this even if tests fail, so we can inspect partial builds
+        if: always()
         with:
           name: generated-apks
           path: build_tmp/*.apk
