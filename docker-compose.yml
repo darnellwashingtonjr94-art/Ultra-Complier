@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  app-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: monad_hft_node_builder
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: python3 -m src.main
