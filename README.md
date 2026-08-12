@@ -1,5 +1,8 @@
 # Ultra-Compiler 🔗📂💻📲
-IMG_1004.png
+
+<p align="center">
+  <img src="IMG_1004.png" alt="Profile Image" width="400"/>
+</p>
 
 The universal all-to-all code translator and Android APK bundler. 
 Translates Python, C++, Rust, JS, Go, and Java into runnable Android APKs, WebAssembly web apps, or native binaries.
