@@ -22,4 +22,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ vars.DOCKERHUB_USERNAME }}/your-image-name:latest
+          tags: ${{ vars.DOCKERHUB_USERNAME }}/ultra-compiler:latest
