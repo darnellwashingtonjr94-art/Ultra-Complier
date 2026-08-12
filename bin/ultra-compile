@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Main CLI entry point for the Ultra-Compiler
+
+if [ "$#" -lt 2 ]; then
+    echo "Usage: ultra-compile <source_file> <target_format>"
+    echo "Example: ultra-compile game.py apk"
+    exit 1
+fi
+
+# Pass arguments to the main Python orchestrator
+python3 -m src.main "$1" "$2"
