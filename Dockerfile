@@ -4,7 +4,7 @@ FROM python:3.10-slim AS builder
 WORKDIR /app
 
 # Install system dependencies, C compilers, and build tools
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install --no-install-recommends \
     build-essential \
     git \
     && rm -rf /var/lib/apt/lists/*
@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy project files
 COPY . .
 
-# Run your build script or setup process to generate outputs
+# Run your build script or setup process if needed
 RUN python3 -m src.main
 
 # Stage 2: Runtime environment
@@ -23,5 +23,5 @@ WORKDIR /app
 # Copy only necessary build artifacts and scripts from the builder stage
 COPY --from=builder /app /app
 
-# Set default command to run your application or tests
+# Set default command to run your application on container startup
 CMD ["python3", "-m", "src.main"]
