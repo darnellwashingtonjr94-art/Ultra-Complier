@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy project files
 COPY . .
 
-# Run your build script or setup process to generate outputs (e.g., APKs or binaries)
+# Run your build script or setup process to generate outputs
 RUN python3 -m src.main
 
 # Stage 2: Runtime environment
