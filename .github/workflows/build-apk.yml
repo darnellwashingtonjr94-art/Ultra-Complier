@@ -21,11 +21,26 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
-    - name: Locate and Build with Gradle
+    - name: Locate Android Project and Build
       run: |
-        # Explicitly check workspace structure and find gradlew or create wrapper fallback if missing
+        # Find the actual Android project directory containing settings.gradle
+        PROJECT_DIR=$(find . -name "settings.gradle" -o -name "settings.gradle.kts" -type f -print -quit | xargs dirname)
+        
+        if [ -z "$PROJECT_DIR" ] || [ "$PROJECT_DIR" = "." ]; then
+            PROJECT_DIR=$(find . -name "build.gradle" -o -name "build.gradle.kts" -type f -print -quit | xargs dirname)
+        fi
+        
+        if [ -z "$PROJECT_DIR" ]; then
+            echo "Error: Could not find Android project root (no settings.gradle or build.gradle found)." >&2
+            exit 1
+        fi
+        
+        echo "Found Android project root at: $PROJECT_DIR"
+        cd "$PROJECT_DIR"
+        
+        # Ensure gradlew exists in the correct project directory, generate it if missing
         if [ ! -f "./gradlew" ]; then
-            echo "Gradle wrapper not found in root, generating one..."
+            echo "Generating Gradle wrapper in $PROJECT_DIR..."
             gradle wrapper
         fi
         
