@@ -11,11 +11,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Crucial Fix: Checks out your repository code so the files exist in the runner
+      # 1. Downloads your repository into the runner
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Sets up the Java 17 environment (matching the Temurin environment from your logs)
+      # 2. Sets up the correct Java environment
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -23,10 +23,22 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      # 3. Grants execute permission now that the file is actually present
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      # 3. Smart Search & Execute Permission
+      - name: Find and Grant Permission to gradlew
+        run: |
+          GRADLEW_PATH=$(find . -name "gradlew" | head -n 1)
+          if [ -z "$GRADLEW_PATH" ]; then
+            echo "CRITICAL ERROR: 'gradlew' file NOT FOUND anywhere in the repository."
+            echo "You must commit 'gradlew', 'gradlew.bat', and the 'gradle/' folder to GitHub."
+            exit 1
+          fi
+          echo "Found gradlew at: $GRADLEW_PATH"
+          chmod +x "$GRADLEW_PATH"
 
-      # 4. Builds the APK
+      # 4. Navigate to the detected directory and Build
       - name: Build with Gradle
-        run: ./gradlew assembleDebug
+        run: |
+          GRADLEW_PATH=$(find . -name "gradlew" | head -n 1)
+          GRADLEW_DIR=$(dirname "$GRADLEW_PATH")
+          cd "$GRADLEW_DIR"
+          ./gradlew assembleDebug
