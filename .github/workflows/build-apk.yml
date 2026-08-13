@@ -21,40 +21,64 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
     - name: Bootstrap and Build with Gradle
       run: |
-        PROJECT_DIR=$(find . -name "settings.gradle*" -o -name "build.gradle*" -type f -print -quit | xargs dirname)
-        if [ -z "$PROJECT_DIR" ]; then
-            PROJECT_DIR="."
-        fi
+        # Operate directly in the workspace root to prevent path mismatch errors
+        cd ${{ github.workspace }}
         
-        cd "$PROJECT_DIR"
-        
-        # Ensure the physical 'app' module directory exists alongside settings.gradle.kts
+        # Ensure the physical 'app' module directory and its build file exist at root
         mkdir -p app
-        if [ ! -f "app/build.gradle.kts" ]; then
-            echo "Creating missing app/build.gradle.kts..."
-            cat << 'EOF' > app/build.gradle.kts
-        plugins {
-            id("com.android.application")
-        }
-        android {
-            namespace = "com.ultracompiler.app"
-            compileSdk = 34
-            defaultConfig {
-                applicationId = "com.ultracompiler.app"
-                minSdk = 24
-                targetSdk = 34
-                versionCode = 1
-                versionName = "1.0"
-            }
-        }
-        EOF
+        cat << 'EOF' > app/build.gradle.kts
+plugins {
+    id("com.android.application")
+}
+android {
+    namespace = "com.ultracompiler.app"
+    compileSdk = 34
+    defaultConfig {
+        applicationId = "com.ultracompiler.app"
+        minSdk = 24
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0"
+    }
+}
+EOF
+
+        # Configure root settings.gradle.kts with proper repository resolution and module inclusion
+        cat << 'EOF' > settings.gradle.kts
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+rootProject.name = "UltraCompilerApp"
+include(":app")
+EOF
+
+        # Ensure root-level build.gradle.kts exists
+        if [ ! -f "build.gradle.kts" ]; then
+            cat << 'EOF' > build.gradle.kts
+plugins {
+    id("com.android.application") version "8.2.0" apply false
+}
+EOF
         fi
-        
-        # Auto-generate wrapper if missing
+
+        # Initialize Gradle wrapper if missing
         if [ ! -f "./gradlew" ]; then
-            echo "Gradle wrapper not found. Initializing gradle wrapper..."
             gradle wrapper
         fi
         
