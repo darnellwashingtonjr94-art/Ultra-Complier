@@ -1,80 +1,37 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultra-Compiler | Web Shell</title>
-    <style>
-        :root {
-            --bg-color: #0d1117;
-            --panel-bg: #161b22;
-            --text-main: #c9d1d9;
-            --accent: #2f81f7;
-            --border: #30363d;
-        }
-        body {
-            font-family: 'Courier New', Courier, monospace;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            box-sizing: border-box;
-        }
-        header { margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-        .workspace { display: flex; gap: 20px; flex: 1; overflow: hidden; }
-        .panel { flex: 1; display: flex; flex-direction: column; background: var(--panel-bg); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
-        .panel-header { background: #21262d; padding: 10px; border-bottom: 1px solid var(--border); font-weight: bold; display: flex; justify-content: space-between; align-items: center;}
-        textarea { flex: 1; background: transparent; color: inherit; border: none; padding: 15px; resize: none; font-family: inherit; font-size: 14px; outline: none; }
-        .console { flex: 1; padding: 15px; overflow-y: auto; background: #010409; color: #3fb950; font-size: 13px; }
-        select, button { padding: 5px 10px; background: #21262d; color: var(--text-main); border: 1px solid var(--border); border-radius: 4px; cursor: pointer;}
-        button { background: #238636; color: white; border: none; font-weight: bold; padding: 8px 16px; }
-        button:hover { background: #2ea043; }
-    </style>
-</head>
-<body>
-    <header>
-        <h1>🚀 Ultra-Compiler Wasm Shell</h1>
-    </header>
-    <div class="workspace">
-        <div class="panel">
-            <div class="panel-header">
-                <span>Source Code</span>
-                <select id="language">
-                    <option value="python">Python 3</option>
-                    <option value="cpp">C / C++</option>
-                    <option value="java">Java</option>
-                    <option value="javascript">JavaScript</option>
-                </select>
-            </div>
-            <textarea id="editor" spellcheck="false"># Write your code here
-print("System Initialized. Awaiting input...")</textarea>
-        </div>
-        <div class="panel">
-            <div class="panel-header">
-                <span>Compilation Output</span>
-                <button onclick="executeBuild()">Compile & Run</button>
-            </div>
-            <div class="console" id="terminal">
-                > System ready.<br>
-            </div>
-        </div>
-    </div>
+<script>
+    async function executeBuild() {
+        const terminal = document.getElementById('terminal');
+        const lang = document.getElementById('language').value;
+        const code = document.getElementById('editor').value;
+        
+        // Output initialization to the web console
+        terminal.innerHTML += `<br>> Transmitting ${lang} source to Ultra-Compiler engine...`;
+        
+        try {
+            // POST the code to the FastAPI backend
+            const response = await fetch('/api/compile', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    language: lang,
+                    source_code: code,
+                    target_format: 'wasm' 
+                })
+            });
 
-    <script>
-        function executeBuild() {
-            const terminal = document.getElementById('terminal');
-            const lang = document.getElementById('language').value;
+            const data = await response.json();
             
-            terminal.innerHTML += `<br>> [Frontend] Parsing ${lang} abstract syntax tree...`;
-            setTimeout(() => terminal.innerHTML += "<br>> [IR Core] Translating to LLVM IR...", 600);
-            setTimeout(() => terminal.innerHTML += "<br>> [Backend] Compiling to WebAssembly...", 1200);
-            setTimeout(() => terminal.innerHTML += "<br>> <strong>[Success] Execution output wrapped in WASM bridge.</strong>", 1800);
+            // Format the backend log output and print to the web terminal
+            const formattedOutput = data.terminal_output.replace(/\n/g, '<br>');
+            terminal.innerHTML += `<br>> <strong>[System Response]:</strong><br>${formattedOutput}`;
             
-            // In a live environment, this is where the fetch() API would POST the code to your Python backend
+        } catch (error) {
+            terminal.innerHTML += `<br><span style="color: #ff7b72;">> [Network Error]: Failed to reach the compiler backend. Is the server running?</span>`;
         }
-    </script>
-</body>
-</html>
+        
+        // Auto-scroll terminal to the bottom
+        terminal.scrollTop = terminal.scrollHeight;
+    }
+</script>
