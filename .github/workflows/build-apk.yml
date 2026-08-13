@@ -15,7 +15,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Set up Java 17
-      uses: actions/setup-java@v4
+      uses: android/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
@@ -26,8 +26,25 @@ jobs:
 
     - name: Bootstrap and Build with Gradle
       run: |
-        # Ensure the physical 'app' module directory and its build file exist at root
-        mkdir -p app
+        cd ${{ github.workspace }}
+        
+        # Ensure the physical 'app/src/main' module structure exists
+        mkdir -p app/src/main
+        
+        # Generate default AndroidManifest.xml required by AGP
+        cat << 'EOF' > app/src/main/AndroidManifest.xml
+        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+            package="com.ultracompiler.app">
+            <application
+                android:allowBackup="true"
+                android:label="UltraCompilerApp"
+                android:supportsRtl="true"
+                android:theme="@android:style/Theme.NoTitleBar">
+            </application>
+        </manifest>
+        EOF
+
+        # Generate app/build.gradle.kts
         cat << 'EOF' > app/build.gradle.kts
         plugins {
             id("com.android.application")
@@ -45,7 +62,7 @@ jobs:
         }
         EOF
 
-        # Configure root settings.gradle.kts with proper repository resolution and module inclusion
+        # Configure root settings.gradle.kts
         cat << 'EOF' > settings.gradle.kts
         pluginManagement {
             repositories {
