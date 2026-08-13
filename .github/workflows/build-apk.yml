@@ -23,13 +23,34 @@ jobs:
 
     - name: Bootstrap and Build with Gradle
       run: |
-        # Locate project directory containing build or settings files
         PROJECT_DIR=$(find . -name "settings.gradle*" -o -name "build.gradle*" -type f -print -quit | xargs dirname)
         if [ -z "$PROJECT_DIR" ]; then
             PROJECT_DIR="."
         fi
         
         cd "$PROJECT_DIR"
+        
+        # Ensure the physical 'app' module directory exists alongside settings.gradle.kts
+        mkdir -p app
+        if [ ! -f "app/build.gradle.kts" ]; then
+            echo "Creating missing app/build.gradle.kts..."
+            cat << 'EOF' > app/build.gradle.kts
+        plugins {
+            id("com.android.application")
+        }
+        android {
+            namespace = "com.ultracompiler.app"
+            compileSdk = 34
+            defaultConfig {
+                applicationId = "com.ultracompiler.app"
+                minSdk = 24
+                targetSdk = 34
+                versionCode = 1
+                versionName = "1.0"
+            }
+        }
+        EOF
+        fi
         
         # Auto-generate wrapper if missing
         if [ ! -f "./gradlew" ]; then
