@@ -52,3 +52,32 @@
    ```bash
    git clone [https://github.com/darnellwashingtonjr94-art/Ultra-Compiler.git](https://github.com/darnellwashingtonjr94-art/Ultra-Compiler.git)
    cd Ultra-Compiler
+
+## 📂 Project Structure
+
+```text
+Ultra-Compiler/
+├── .github/
+│   └── workflows/
+│       └── build-apk.yml          # Automated CI/CD Android compilation pipeline
+├── backend/
+│   ├── Dockerfile                 # Container configuration for API service
+│   ├── main.py                    # FastAPI server & telemetry endpoints
+│   └── requirements.txt           # Python backend dependencies
+├── frontend/
+│   ├── src/
+│   │   ├── App.css                # Dashboard styling
+│   │   ├── App.jsx                # Main React control interface
+│   │   └── index.js               # React entry point
+│   ├── Dockerfile                 # Frontend multi-stage nginx container build
+│   └── package.json               # Node.js dependencies & scripts
+├── src/
+│   ├── packagers/
+│   │   ├── __init__.py
+│   │   ├── apk_builder.py         # Dynamic Gradle bootstrapping & APK packager
+│   │   └── ide_orchestrator_bridge.py # Bridge connecting mobile interface to LLVM pipeline
+│   └── main.py                    # Core compiler execution engine
+├── templates/
+│   └── MobileIDEActivity.kt       # Native Android Jetpack Compose IDE shell
+├── docker-compose.yml             # Unified multi-container stack orchestrator
+└── README.md                      # Project documentation
