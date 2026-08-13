@@ -3,6 +3,10 @@ import subprocess
 
 def ensure_gradle_environment(output_dir):
     """Ensures settings.gradle.kts, build.gradle.kts, app directory, and gradlew exist before building."""
+    # Safety check: if output_dir points to a file, force it to a safe directory name
+    if os.path.isfile(output_dir) or "." in os.path.basename(output_dir):
+        output_dir = "dist_apk"
+        
     os.makedirs(output_dir, exist_ok=True)
     
     # Create physical 'app' module directory to satisfy include(":app")
@@ -43,6 +47,10 @@ def assemble_apk(*args, **kwargs):
     binary_path = args[0] if len(args) > 0 else kwargs.get("binary_path", "app/build")
     output_dir = args[1] if len(args) > 1 else kwargs.get("output_dir", "dist_apk")
     
+    # Sanitize output_dir if it accidentally received a file path
+    if isinstance(output_dir, str) and (os.path.isfile(output_dir) or "." in os.path.basename(output_dir)):
+        output_dir = "dist_apk"
+
     print(f"[Packager] Building APK for binary: {binary_path}")
     ensure_gradle_environment(output_dir)
     
