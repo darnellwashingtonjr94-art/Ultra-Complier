@@ -1,28 +1,33 @@
 import os
 import subprocess
 
-def assemble_apk(binary_data, target_format, *args, **kwargs):
-    print(f"[Packager] Assembling APK...")
+def ensure_gradle_environment(output_dir):
+    """Ensures settings.gradle.kts, build.gradle.kts, and gradlew exist before building."""
+    os.makedirs(output_dir, exist_ok=True)
     
-    # Dynamically locate the Android SDK
-    android_home = os.environ.get('ANDROID_HOME', '/usr/local/lib/android/sdk')
-    aapt2_path = os.path.join(android_home, 'build-tools', '34.0.0', 'aapt2')
+    settings_file = os.path.join(output_dir, "settings.gradle.kts")
+    if not os.path.exists(settings_file):
+        with open(settings_file, "w") as f:
+            f.write('rootProject.name = "UltraCompilerApp"\ninclude(":app")\n')
+
+    build_gradle = os.path.join(output_dir, "build.gradle.kts")
+    if not os.path.exists(build_gradle):
+        with open(build_gradle, "w") as f:
+            f.write('plugins {\n    id("com.android.application") version "8.2.0" apply false\n}\n')
+
+    gradlew_path = os.path.join(output_dir, "gradlew")
+    if not os.path.exists(gradlew_path):
+        print("[Packager] Gradle wrapper missing. Generating wrapper...")
+        subprocess.run(["gradle", "wrapper", "--project-dir", output_dir], check=True)
+
+def assemble_apk(binary_path, output_dir, manifest_path):
+    print(f"[Packager] Building APK for binary: {binary_path}")
+    ensure_gradle_environment(output_dir)
     
-    # Run AAPT2 check
-    try:
-        subprocess.run([aapt2_path, "version"], check=True, capture_output=True, text=True)
-    except FileNotFoundError:
-        raise FileNotFoundError(f"[Errno 2] No such file or directory: '{aapt2_path}'")
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"AAPT2 failed to execute: {e.stderr}")
+    gradlew = os.path.join(output_dir, "gradlew")
+    if os.path-exists(gradlew):
+        os.chmod(gradlew, 0o755)
+        subprocess.run([gradlew, "assembleDebug", "-p", output_dir], check=True)
     
-    # Ensure build directory exists
-    os.makedirs("build_tmp", exist_ok=True)
-    
-    # Always save as app-release.apk to satisfy the test assertions
-    output_apk = "build_tmp/app-release.apk"
-    
-    with open(output_apk, "w") as f:
-        f.write("ULTRA_COMPILER_GENERATED_APK_DATA")
-        
-    return "app-release.apk"
+    print("[Packager] APK compilation complete.")
+    return os.path.join(output_dir, "app/build/outputs/apk/debug/app-debug.apk")
