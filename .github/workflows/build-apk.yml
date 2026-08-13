@@ -23,21 +23,11 @@ jobs:
 
     - name: Locate and Build with Gradle
       run: |
-        # Fallback search ensuring we check current directory, workspace root, and any nested subfolders thoroughly
-        GRADLEW_PATH=$(find . -name "gradlew" -type f -print -quit)
-        if [ -z "$GRADLEW_PATH" ]; then
-            GRADLEW_PATH=$(find "$GITHUB_WORKSPACE" -name "gradlew" -type f -print -quit)
+        # Explicitly check workspace structure and find gradlew or create wrapper fallback if missing
+        if [ ! -f "./gradlew" ]; then
+            echo "Gradle wrapper not found in root, generating one..."
+            gradle wrapper
         fi
         
-        if [ -z "$GRADLEW_PATH" ]; then
-            echo "Error: gradlew wrapper not found anywhere in the repository." >&2
-            exit 1
-        fi
-        
-        TARGET_DIR=$(dirname "$GRADLEW_PATH")
-        echo "Found gradlew at: $GRADLEW_PATH"
-        echo "Target build directory: $TARGET_DIR"
-        
-        cd "$TARGET_DIR"
         chmod +x ./gradlew
         ./gradlew assembleDebug
