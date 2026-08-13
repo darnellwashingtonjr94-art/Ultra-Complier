@@ -23,8 +23,8 @@ jobs:
 
     - name: Locate and Build with Gradle
       run: |
-        # Look for gradlew anywhere inside the runner workspace accurately
-        GRADLEW_PATH=$(find . -name "gradlew" -type f -print -quit)
+        # Use absolute path search from github workspace root to avoid relative depth issues
+        GRADLEW_PATH=$(find "$GITHUB_WORKSPACE" -name "gradlew" -type f -print -quit)
         
         if [ -z "$GRADLEW_PATH" ]; then
             echo "Error: gradlew file not found in workspace." >&2
